@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/test")
 public class TestController {
-    @GetMapping("/")
-    public ResponseEntity<ApiResponseDto<?>> Test() {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(new ApiResponseDto<>(true, "Let's learn spring security with JWT!"));
-    }
+//    @GetMapping("/")
+//    public ResponseEntity<ApiResponseDto<?>> Test() {
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(new ApiResponseDto<>(true, "Let's learn spring security with JWT!"));
+//    }
 }
