@@ -1,20 +1,31 @@
 package com.dharshi.jwtExample.Services;
 
 import com.dharshi.jwtExample.dtos.ApiResponseDto;
+import com.dharshi.jwtExample.dtos.SignInRequestDto;
+import com.dharshi.jwtExample.dtos.SignInResponseDto;
 import com.dharshi.jwtExample.dtos.SignUpRequestDto;
 import com.dharshi.jwtExample.exceptions.RoleNotFoundException;
 import com.dharshi.jwtExample.exceptions.UserAlreadyExistsException;
 import com.dharshi.jwtExample.factories.RoleFactory;
 import com.dharshi.jwtExample.models.Role;
 import com.dharshi.jwtExample.models.User;
+import com.dharshi.jwtExample.security.UserDetailsImpl;
+import com.dharshi.jwtExample.security.jwt.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class AuthServiceImpl implements AuthService {
@@ -27,6 +38,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private RoleFactory roleFactory;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @Override
     public ResponseEntity<ApiResponseDto<?>> signUpUser(SignUpRequestDto signUpRequestDto)
@@ -46,6 +63,36 @@ public class AuthServiceImpl implements AuthService {
                         .message("User account has been successfully created!")
                         .build()
                 );
+    }
+
+    @Override
+    public ResponseEntity<ApiResponseDto<?>> signInUser(SignInRequestDto signInRequestDto) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(signInRequestDto.getEmail(), signInRequestDto.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        SignInResponseDto signInResponseDto = SignInResponseDto.builder()
+                .username(userDetails.getUsername())
+                .email(userDetails.getEmail())
+                .id(userDetails.getId())
+                .token(jwt)
+                .roles(roles)
+                .build();
+
+        return ResponseEntity.ok(
+                ApiResponseDto.builder()
+                        .isSuccess(true)
+                        .message("Sign in successfull!")
+                        .response(signInResponseDto)
+                        .build()
+        );
     }
 
     private User createUser(SignUpRequestDto signUpRequestDto) throws RoleNotFoundException {

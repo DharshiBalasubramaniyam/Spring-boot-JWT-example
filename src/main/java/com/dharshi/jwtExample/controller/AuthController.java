@@ -2,6 +2,7 @@ package com.dharshi.jwtExample.controller;
 
 import com.dharshi.jwtExample.Services.AuthService;
 import com.dharshi.jwtExample.dtos.ApiResponseDto;
+import com.dharshi.jwtExample.dtos.SignInRequestDto;
 import com.dharshi.jwtExample.dtos.SignUpRequestDto;
 import com.dharshi.jwtExample.exceptions.RoleNotFoundException;
 import com.dharshi.jwtExample.exceptions.UserAlreadyExistsException;
@@ -18,9 +19,14 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponseDto<?>> registerUser(@RequestBody @Valid SignUpRequestDto signUpRequestDto)
+    public ResponseEntity<ApiResponseDto<?>> signUpUser(@RequestBody @Valid SignUpRequestDto signUpRequestDto)
             throws UserAlreadyExistsException, RoleNotFoundException {
         return authService.signUpUser(signUpRequestDto);
+    }
+
+    @PostMapping("/signin")
+    public ResponseEntity<ApiResponseDto<?>> signInUser(@RequestBody @Valid SignInRequestDto signInRequestDto){
+        return authService.signInUser(signInRequestDto);
     }
 
 }
